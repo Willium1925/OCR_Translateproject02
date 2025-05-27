@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>日文 OCR + 翻譯系統</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        #app { display: flex; flex-direction: column; gap: 10px; }
+        .operation { padding: 10px; background-color: #f0f0f0; border-radius: 5px; }
+        .content { display: flex; gap: 10px; margin-top: 10px; }
+        .content img { max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 5px; }
+        .box { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="operation">
+        <input type="file" @change="onFileChange">
+        <button @click="uploadImage">上傳辨識</button>
+    </div>
+    <div class="content">
+        <div class="box">
+            <h3>上傳圖片預覽</h3>
+            <img v-if="imageUrl" :src="imageUrl" alt="預覽圖片">
+        </div>
+        <div class="box">
+            <h3>翻譯結果</h3>
+            <pre>{{ resultText }}</pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            imageFile: null,
+            imageUrl: null,
+            resultText: ''
+        },
+        methods: {
+            onFileChange(e) {
+                this.imageFile = e.target.files[0];
+                this.imageUrl = URL.createObjectURL(this.imageFile);
+            },
+            uploadImage() {
+                if (!this.imageFile) {
+                    alert('請先選擇圖片');
+                    return;
+                }
+                let formData = new FormData();
+                formData.append("file", this.imageFile);
+
+                axios.post("http://localhost:8080/upload", formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                })
+                    .then(response => {
+                        this.resultText = response.data;
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        alert('上傳失敗');
+                    });
+            }
+        }
+    });
+</script>
+</body>
+</html>
